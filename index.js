@@ -73,6 +73,13 @@ app.get('/about', (req, res) => {
 app.get('/users', (req, res) => {
   res.send('User page')
 })
+
+// Logout route
+app.post('/logout', (req, res) => {
+  // Since JWTs are stateless, just instruct client to remove the token.
+  res.json({ message: "Logged out successfully. Please remove token on client." });
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
