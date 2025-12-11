@@ -80,7 +80,6 @@ app.post('/logout', (req, res) => {
   res.json({ message: "Logged out successfully. Please remove token on client." });
 });
 
-const port = 5000;
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+app.listen(5000, '0.0.0.0', () => {
+  console.log(`Server running at http://localhost:5000/`);
 });
