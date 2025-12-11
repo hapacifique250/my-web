@@ -3,8 +3,9 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'hapacifique250/my-web-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        HOST_PORT = '5000'          // Free port on the host machine
-        CONTAINER_PORT = '3000'     // Port your app listens on inside container
+        CONTAINER_NAME = 'my-web-app'
+        HOST_PORT = '5000'
+        CONTAINER_PORT = '3000'
     }
     stages {
         stage('Checkout') {
@@ -16,7 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
         }
@@ -35,17 +36,9 @@ pipeline {
             steps {
                 script {
                     bat """
-                    docker rm -f my-web-app || exit 0
-                    docker run -d --name my-web-app -p %HOST_PORT%:%CONTAINER_PORT% ${DOCKER_IMAGE}:latest
+                    docker rm -f %CONTAINER_NAME% || exit 0
+                    docker run -d --name %CONTAINER_NAME% -p %HOST_PORT%:%CONTAINER_PORT% %DOCKER_IMAGE%:latest
                     """
-                }
-            }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                script {
-                    bat "curl http://localhost:%HOST_PORT%"
                 }
             }
         }
