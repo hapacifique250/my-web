@@ -1,26 +1,55 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'yourdockerhubusername/my-web'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+    }
+
     stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build') {
             steps {
-                echo "Building the project..."
-                bat 'dir'   // Windows directory listing
+                bat 'npm install'
             }
         }
 
         stage('Test') {
             steps {
-                echo "Running tests..."
-                // Add test commands here, for example:
-                // bat 'npm test'
+                bat 'npm test'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker Image') {
             steps {
-                echo "Deploying..."
-                // Add deploy commands here
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Local Docker Host') {
+            steps {
+                bat '''
+                docker rm -f my-web || true
+                docker run -d --name my-web -p 8080:80 ${DOCKER_IMAGE}:latest
+                '''
             }
         }
     }
