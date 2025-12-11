@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -22,27 +21,20 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Prevent pipeline failure due to missing tests
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'npm test'
-                }
+                bat 'npm test'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
-                }
+                bat 'docker build -t %DOCKER_IMAGE%:latest .'
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        dockerImage.push('latest')
-                    }
+                withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: "https://index.docker.io/v1/"]) {
+                    bat 'docker push %DOCKER_IMAGE%:latest'
                 }
             }
         }
@@ -51,7 +43,7 @@ pipeline {
             steps {
                 bat '''
                 docker rm -f my-web-app || exit 0
-                docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
+                docker run -d --name my-web-app -p 8080:80 %DOCKER_IMAGE%:latest
                 '''
             }
         }
